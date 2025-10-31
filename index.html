@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SmartCare Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>SmartCare MVP</title>
 
-<!-- Tailwind CDN -->
+<!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- Lucide icons -->
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -23,50 +23,48 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f3f4f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  min-height: 100vh;
+  background: #e5e7eb;
   margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
-/* Simulated phone frame */
-.phone-frame {
-  width: 100%;
-  max-width: 375px;
-  height: 740px;
+/* 📱 Mobile container */
+.app-container {
   background: #fff;
-  border: 10px solid #222;
+  width: 100%;
+  max-width: 400px;
+  height: 90vh;
   border-radius: 30px;
-  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
-.h1-title { font-size: 1.4rem; font-weight: 800; }
-.h2-subtitle { font-size: 1.05rem; font-weight: 700; }
-.body-text { font-size: 0.95rem; }
+/* 🔤 Text */
+.h1-title { font-size: 1.3rem; font-weight: 800; }
+.h2-subtitle { font-size: 1rem; font-weight: 700; }
+.body-text { font-size: 0.9rem; }
 
 /* Buttons */
-.app-btn { display: flex; align-items: center; justify-content: center; font-weight: 600; border-radius: 0.75rem; }
-.app-btn i { width: 1.1rem; height: 1.1rem; }
+.app-btn { display: flex; align-items: center; justify-content: center; font-weight: 600; border-radius: 0.75rem; transition: 0.2s; }
+.app-btn:active { transform: scale(0.96); }
 
-/* Overlay */
-#alert-overlay { backdrop-filter: blur(2px); }
+/* Alert overlay */
+#alert-overlay { backdrop-filter: blur(4px); }
 
-/* Animations */
-@keyframes pulse-slow { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
-.pulse-slow { animation: pulse-slow 1.8s infinite; }
+/* Responsive scaling */
+* { box-sizing: border-box; max-width: 100%; }
 </style>
 </head>
 <body>
 
-<div class="phone-frame">
-
+<div class="app-container">
   <!-- HEADER -->
   <header id="app-header" class="flex items-center justify-between px-3 py-2 text-white bg-[var(--color-primary)]">
     <button id="back-btn" class="p-1 hidden" onclick="goBack()">
@@ -74,7 +72,7 @@ body {
     </button>
     <div class="flex items-center justify-center gap-2 mx-auto">
       <img src="https://github.com/adawiyahh/SmartCare/blob/main/logo%202%20SmartCare.jpg?raw=true"
-           alt="SmartCare logo" class="w-10 h-10 rounded-full border-2 border-white shadow" />
+           alt="SmartCare Logo" class="w-9 h-9 rounded-full border-2 border-white shadow" />
       <span id="header-title" class="text-sm font-semibold">SmartCare</span>
     </div>
     <div class="w-6"></div>
@@ -102,51 +100,39 @@ body {
   <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-6 z-40 hidden">
     <div class="bg-black text-white text-xs px-3 py-2 rounded-lg shadow">Notification</div>
   </div>
-
 </div>
 
 <script>
 const STORAGE_KEY = 'smartcare_app_state_v2';
-function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) } catch { return null } }
-function saveState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)) }
+function loadState(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))}catch{return null}}
+function saveState(s){localStorage.setItem(STORAGE_KEY,JSON.stringify(s))}
 
 let appState = loadState() || {
-  role: null,
-  screen: 'roleSelect',
-  history: [],
-  isFallDetected: false,
-  elderName: "Theo James",
-  caregiverName: "Adrubyjane",
-  medications: [
-    { id:1, name:"Metformin", dose:"500mg", time:"8:00 AM", taken:false },
-    { id:2, name:"Lisinopril", dose:"10mg", time:"6:00 PM", taken:false }
+  role:null,
+  screen:'roleSelect',
+  history:[],
+  isFallDetected:false,
+  elderName:"Theo James",
+  caregiverName:"Adrubyjane",
+  medications:[
+    {id:1,name:"Metformin",dose:"500mg",time:"8:00 AM",taken:false},
+    {id:2,name:"Lisinopril",dose:"10mg",time:"6:00 PM",taken:false}
   ],
-  chatMessages: []
+  chatMessages:[]
 };
 
-function setAppState(s){ appState=s; saveState(appState); }
-function showToast(t){const e=document.getElementById('toast');e.querySelector('div').textContent=t;e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),1800)}
-
-function pushHistory(s){ if(!appState.history.includes(s)) appState.history.push(s); saveState(appState); }
-function goBack(){ if(appState.history.length){appState.screen=appState.history.pop()} else {appState.screen='roleSelect';appState.history=[]} saveState(appState); renderApp(); }
-function setScreen(s,p=true){ if(p)pushHistory(appState.screen); appState.screen=s; saveState(appState); renderApp(); }
-
-function selectRole(r){ appState.role=r; setScreen('home',true); showToast(`Signed in as ${r}`); }
-function markMedicationTaken(id){const m=appState.medications.find(x=>x.id===id);if(!m||m.taken)return;m.taken=true;saveState(appState);showToast('Marked taken');renderApp(false)}
-
-function sendMessage(){
-  const i=document.getElementById('chat-input');
-  const t=i.value.trim();
-  if(!t)return;
-  appState.chatMessages.push({id:Date.now(),user:appState.role==='elder'?appState.elderName:appState.caregiverName,text:t});
-  i.value=''; saveState(appState); renderApp(false);
-}
-
+function setAppState(s){appState=s;saveState(appState);}
+function showToast(t){const e=document.getElementById('toast');e.querySelector('div').textContent=t;e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),1800);}
+function pushHistory(s){if(!appState.history.includes(s))appState.history.push(s);saveState(appState);}
+function goBack(){if(appState.history.length){appState.screen=appState.history.pop()}else{appState.screen='roleSelect';appState.history=[]}saveState(appState);renderApp();}
+function setScreen(s,p=true){if(p)pushHistory(appState.screen);appState.screen=s;saveState(appState);renderApp();}
+function selectRole(r){appState.role=r;setScreen('home',true);showToast(`Signed in as ${r}`);}
+function markMedicationTaken(id){const m=appState.medications.find(x=>x.id===id);if(!m||m.taken)return;m.taken=true;saveState(appState);showToast('Marked taken');renderApp(false);}
+function sendMessage(){const i=document.getElementById('chat-input');const t=i.value.trim();if(!t)return;appState.chatMessages.push({id:Date.now(),user:appState.role==='elder'?appState.elderName:appState.caregiverName,text:t});i.value='';saveState(appState);renderApp(false);}
 function simulateFall(){appState.isFallDetected=true;document.getElementById('overlay-elder').textContent=appState.elderName;document.getElementById('alert-overlay').classList.remove('hidden');saveState(appState);showToast('Fall detected');}
 function resolveAlert(){appState.isFallDetected=false;document.getElementById('alert-overlay').classList.add('hidden');saveState(appState);setScreen('home',false);showToast('Alert cleared');}
 function simulateCallToCaregiver(){showToast('Calling caregiver...');}
 
-/* --- RENDER --- */
 function updateHeader(){
   const back=document.getElementById('back-btn');
   const title=document.getElementById('header-title');
@@ -160,32 +146,32 @@ function updateHeader(){
 function renderRoleSelect(){
   return `
   <div class="flex flex-col justify-center items-center text-center h-full gap-4">
-    <i data-lucide="heart-handshake" class="w-12 h-12 text-gray-700"></i>
+    <i data-lucide="heart-handshake" class="w-10 h-10 text-gray-700"></i>
     <div>
       <div class="h1-title mb-1">Who are you?</div>
       <p class="text-sm text-gray-600">Choose your role</p>
     </div>
-    <button class="app-btn bg-sky-600 text-white py-3 w-full" onclick="selectRole('elder')">
+    <button class="app-btn bg-sky-600 text-white py-2.5 w-full" onclick="selectRole('elder')">
       <i data-lucide="person-standing"></i>&nbsp;Elder — ${appState.elderName}
     </button>
-    <button class="app-btn bg-emerald-600 text-white py-3 w-full" onclick="selectRole('caregiver')">
+    <button class="app-btn bg-emerald-600 text-white py-2.5 w-full" onclick="selectRole('caregiver')">
       <i data-lucide="user-check"></i>&nbsp;Caregiver — ${appState.caregiverName}
     </button>
   </div>`;}
 
 function renderElderHome(){
   const next=appState.medications.find(m=>!m.taken);
-  const nextHtml=next?`<div class="text-lg font-semibold">${next.time}</div><div class="text-sm">${next.name} (${next.dose})</div>`:'All meds done 🎉';
+  const nextHtml=next?`<div class="text-base font-semibold">${next.time}</div><div class="text-xs">${next.name} (${next.dose})</div>`:'All meds done 🎉';
   return `
   <div class="space-y-3">
     <div class="bg-white p-3 rounded-lg shadow">
-      <div class="text-sm text-gray-600">Welcome back</div>
+      <div class="text-xs text-gray-600">Welcome back</div>
       <div class="text-lg font-bold text-sky-700">${appState.elderName}</div>
     </div>
     <div class="bg-amber-100 p-3 rounded-lg">${nextHtml}</div>
     <div class="grid grid-cols-2 gap-2">
-      <button class="app-btn bg-sky-100 text-sky-800 py-3" onclick="setScreen('meds')"><i data-lucide="pill"></i>&nbsp;Meds</button>
-      <button class="app-btn bg-sky-100 text-sky-800 py-3" onclick="setScreen('chat')"><i data-lucide="message-square-text"></i>&nbsp;Chat</button>
+      <button class="app-btn bg-sky-100 text-sky-800 py-2" onclick="setScreen('meds')"><i data-lucide="pill"></i>&nbsp;Meds</button>
+      <button class="app-btn bg-sky-100 text-sky-800 py-2" onclick="setScreen('chat')"><i data-lucide="message-square-text"></i>&nbsp;Chat</button>
     </div>
     <button id="emergency-btn" class="app-btn bg-red-600 text-white py-3 w-full rounded-xl"
       onmousedown="simulateFall()" ontouchstart="simulateFall()">
@@ -197,11 +183,11 @@ function renderCaregiverHome(){
   return `
   <div class="space-y-3">
     <div class="bg-white p-3 rounded-lg shadow">
-      <div class="text-sm text-gray-600">Hello</div>
+      <div class="text-xs text-gray-600">Hello</div>
       <div class="text-lg font-bold text-teal-600">${appState.caregiverName}</div>
     </div>
-    <button class="app-btn bg-teal-500 text-white py-3 w-full" onclick="setScreen('chat')"><i data-lucide="message-circle"></i>&nbsp;Chat</button>
-    <button class="app-btn ${appState.isFallDetected?'bg-red-600 text-white':'bg-gray-200 text-gray-700'} py-3 w-full"
+    <button class="app-btn bg-teal-500 text-white py-2.5 w-full" onclick="setScreen('chat')"><i data-lucide="message-circle"></i>&nbsp;Chat</button>
+    <button class="app-btn ${appState.isFallDetected?'bg-red-600 text-white':'bg-gray-200 text-gray-700'} py-2.5 w-full"
       onclick="${appState.isFallDetected?'setScreen(\\'alert\\')':'showToast(\\'No alerts\\')'}">
       <i data-lucide="bell"></i>&nbsp;${appState.isFallDetected?'View Alert':'No Active Alerts'}
     </button>
@@ -250,18 +236,18 @@ function renderApp(renderIcons=true){
   updateHeader();
   let html='';
   switch(appState.screen){
-    case 'roleSelect': html=renderRoleSelect(); break;
-    case 'home': html=appState.role==='elder'?renderElderHome():renderCaregiverHome(); break;
-    case 'meds': html=renderElderMedication(); break;
-    case 'chat': html=renderChat(); break;
-    case 'alert': html=renderFallAlert(); break;
+    case 'roleSelect':html=renderRoleSelect();break;
+    case 'home':html=appState.role==='elder'?renderElderHome():renderCaregiverHome();break;
+    case 'meds':html=renderElderMedication();break;
+    case 'chat':html=renderChat();break;
+    case 'alert':html=renderFallAlert();break;
   }
   main.innerHTML=html;
-  if(renderIcons) lucide.createIcons();
+  if(renderIcons)lucide.createIcons();
   if(appState.screen==='chat'){const box=document.getElementById('chat-messages');if(box)box.scrollTop=box.scrollHeight;}
 }
-
 document.addEventListener('DOMContentLoaded',()=>renderApp());
 </script>
+
 </body>
 </html>
