@@ -1,19 +1,20 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>SmartCare MVP</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SmartCare Prototype</title>
 
-<!-- Tailwind CSS -->
+<!-- Tailwind (CDN) -->
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- Lucide icons -->
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
+/* EDIT: Fixed CSS variable and general styles */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-:root {
+:root{
   --color-primary: #2254c5;
   --color-secondary: #fef3c7;
   --color-text: #1f2937;
@@ -23,231 +24,545 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: #e5e7eb;
+  background-color: #f3f4f6;
   margin: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+  min-height: 100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
 }
 
-/* 📱 Mobile container */
-.app-container {
-  background: #fff;
-  width: 100%;
-  max-width: 400px;
-  height: 90vh;
-  border-radius: 30px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+/* phone mock */
+.phone-frame{
+  width:100%;
+  max-width:400px;
+  height:820px;
+  background:white;
+  border:12px solid #222;
+  border-radius:36px;
+  box-shadow: 0 25px 40px rgba(0,0,0,0.12);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  position:relative;
 }
 
-/* 🔤 Text */
-.h1-title { font-size: 1.3rem; font-weight: 800; }
-.h2-subtitle { font-size: 1rem; font-weight: 700; }
-.body-text { font-size: 0.9rem; }
+/* EDIT: improved header layout so title stays centered with logo & back button */
+.header-center{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  justify-content:center;
+  width:100%;
+}
 
-/* Buttons */
-.app-btn { display: flex; align-items: center; justify-content: center; font-weight: 600; border-radius: 0.75rem; transition: 0.2s; }
-.app-btn:active { transform: scale(0.96); }
+/* buttons */
+.app-btn{ cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; border-radius:16px; font-weight:600;}
+.large-icon{ width:3rem; height:3rem; }
 
-/* Alert overlay */
-#alert-overlay { backdrop-filter: blur(4px); }
+/* typography */
+.h1-title{ font-size:1.9rem; font-weight:800; color:var(--color-text); }
+.h2-subtitle{ font-size:1.25rem; font-weight:700; color:var(--color-text); }
+.body-text{ font-size:1.05rem; color:#334155; }
 
-/* Responsive scaling */
-* { box-sizing: border-box; max-width: 100%; }
+/* overlay */
+#alert-overlay{ backdrop-filter: blur(2px); }
+
+/* small helpers */
+.hidden-vis{ visibility:hidden; } /* occupies layout but invisible when needed */
+.pointer-none{ pointer-events:none; }
+
+/* accessibility focus */
+button:focus{ outline:3px solid rgba(99,102,241,0.25); outline-offset:2px; }
+
+/* animations */
+@keyframes pulse-slow { 0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+.pulse-slow{ animation: pulse-slow 1.6s infinite; }
 </style>
 </head>
 <body>
 
-<div class="app-container">
+<!-- APP FRAME -->
+<div class="phone-frame" role="application" aria-label="SmartCare Prototype">
+
   <!-- HEADER -->
-  <header id="app-header" class="flex items-center justify-between px-3 py-2 text-white bg-[var(--color-primary)]">
-    <button id="back-btn" class="p-1 hidden" onclick="goBack()">
-      <i data-lucide="chevron-left" class="w-5 h-5"></i>
+  <header id="app-header" class="p-3 flex items-center" style="background:var(--color-primary); color:white;">
+    <!-- EDIT: Back button changed from opacity toggle to hidden class toggle to ensure clickability -->
+    <button id="back-btn" aria-label="Back" class="p-2 rounded-md mr-2 hidden" onclick="goBack()" title="Back">
+      <i data-lucide="chevron-left" class="w-6 h-6"></i>
     </button>
-    <div class="flex items-center justify-center gap-2 mx-auto">
-      <img src="https://github.com/adawiyahh/SmartCare/blob/main/logo%202%20SmartCare.jpg?raw=true"
-           alt="SmartCare Logo" class="w-9 h-9 rounded-full border-2 border-white shadow" />
-      <span id="header-title" class="text-sm font-semibold">SmartCare</span>
+
+    <div class="header-center">
+      <!-- EDIT: logo made bigger & accessible -->
+      <img id="logo" src="https://github.com/adawiyahh/SmartCare/blob/main/logo%202%20SmartCare.jpg?raw=true"
+           alt="SmartCare logo" class="w-16 h-16 rounded-full shadow-md border-2 border-white">
+      <div id="header-title" class="h2-subtitle text-white text-center">SmartCare</div>
     </div>
-    <div class="w-6"></div>
+
+    <!-- spacer to balance header so title stays centered -->
+    <div style="width:48px"></div>
   </header>
 
-  <!-- MAIN APP -->
-  <main id="app-screen" class="flex-grow p-3 overflow-auto bg-gray-50 text-gray-800"></main>
+  <!-- MAIN SCREEN -->
+  <main id="app-screen" class="flex-grow p-5 overflow-auto bg-gray-50" tabindex="0"></main>
 
-  <!-- ALERT OVERLAY -->
-  <div id="alert-overlay" class="absolute inset-0 bg-red-700 bg-opacity-95 text-white z-30 hidden flex items-center justify-center p-4">
-    <div class="max-w-[260px] text-center">
-      <i data-lucide="shield-alert" class="w-14 h-14 mx-auto mb-3"></i>
-      <div class="h1-title mb-1">EMERGENCY</div>
-      <div class="text-sm mb-3">Fall detected for <strong id="overlay-elder"></strong>.</div>
-      <button class="app-btn bg-white text-red-700 py-2 w-full mb-2" onclick="resolveAlert('Elder')">
-        <i data-lucide="check"></i>&nbsp;I'm okay
-      </button>
-      <button class="app-btn bg-gray-200 text-gray-800 py-2 w-full" onclick="simulateCallToCaregiver()">
-        <i data-lucide="phone-call"></i>&nbsp;Call caregiver
-      </button>
+  <!-- EDIT: alert overlay with accessible controls -->
+  <div id="alert-overlay" class="absolute inset-0 bg-red-700 bg-opacity-95 text-white z-30 hidden flex items-center justify-center p-6">
+    <div class="max-w-xs text-center">
+      <i data-lucide="shield-alert" class="w-20 h-20 mx-auto mb-4"></i>
+      <div class="h1-title mb-2">EMERGENCY ALERT</div>
+      <div class="body-text mb-4">Fall detected for <strong id="overlay-elder"></strong>. A caregiver was notified.</div>
+      <div class="flex flex-col gap-3">
+        <button class="app-btn bg-white text-red-700 py-3" onclick="resolveAlert('Elder')">
+          <i data-lucide="check" class="w-5 h-5"></i> I'm okay — cancel
+        </button>
+        <button class="app-btn bg-gray-200 text-gray-800 py-3" onclick="simulateCallToCaregiver()">
+          <i data-lucide="phone-call" class="w-5 h-5"></i> Call caregiver (simulate)
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- TOAST -->
-  <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-6 z-40 hidden">
-    <div class="bg-black text-white text-xs px-3 py-2 rounded-lg shadow">Notification</div>
+  <!-- Tiny ephemeral toast/notification -->
+  <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-8 z-40 hidden">
+    <div class="bg-black text-white px-4 py-2 rounded-lg shadow">Notification</div>
   </div>
+
 </div>
 
 <script>
-const STORAGE_KEY = 'smartcare_app_state_v2';
-function loadState(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))}catch{return null}}
-function saveState(s){localStorage.setItem(STORAGE_KEY,JSON.stringify(s))}
+/* ============================
+   EDIT: Full rewritten JS
+   - persistent state via localStorage
+   - clean navigation + working back button (hidden toggled)
+   - hold-to-trigger emergency (desktop/mobile)
+   - improved UI elements: analytics, meds persistence, chat persistence
+   - lucide.createIcons() always run after updates
+   ============================ */
 
-let appState = loadState() || {
-  role:null,
-  screen:'roleSelect',
-  history:[],
-  isFallDetected:false,
-  elderName:"Theo James",
-  caregiverName:"Adrubyjane",
-  medications:[
-    {id:1,name:"Metformin",dose:"500mg",time:"8:00 AM",taken:false},
-    {id:2,name:"Lisinopril",dose:"10mg",time:"6:00 PM",taken:false}
+/* ---------- STORAGE HELPERS (EDIT) ---------- */
+const STORAGE_KEY = 'smartcare_app_state_v1';
+
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return null;
+  try { return JSON.parse(raw); } catch(e){ return null; }
+}
+function saveState(state){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+/* ---------- DEFAULT STATE (EDIT) ---------- */
+const defaultState = {
+  role: null,
+  screen: 'roleSelect',
+  history: [],
+  isFallDetected: false,
+  elderName: "Theo James",
+  caregiverName: "Adrubyjane",
+  medications: [
+    { id:1, name:"Metformin (Diabetes)", dose:"500mg", time:"8:00 AM", taken:false },
+    { id:2, name:"Lisinopril (BP)", dose:"10mg", time:"6:00 PM", taken:false },
+    { id:3, name:"Vitamin D", dose:"1 tablet", time:"8:00 PM", taken:false }
   ],
-  chatMessages:[]
+  chatMessages: [
+    { id:1, user:'Adrubyjane', role:'caregiver', text:'Good morning! Did you sleep well?', timestamp:'09:00' },
+    { id:2, user:'Theo James', role:'elder', text:'Yes, I slept fine, thanks!', timestamp:'09:05' }
+  ]
 };
 
-function setAppState(s){appState=s;saveState(appState);}
-function showToast(t){const e=document.getElementById('toast');e.querySelector('div').textContent=t;e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),1800);}
-function pushHistory(s){if(!appState.history.includes(s))appState.history.push(s);saveState(appState);}
-function goBack(){if(appState.history.length){appState.screen=appState.history.pop()}else{appState.screen='roleSelect';appState.history=[]}saveState(appState);renderApp();}
-function setScreen(s,p=true){if(p)pushHistory(appState.screen);appState.screen=s;saveState(appState);renderApp();}
-function selectRole(r){appState.role=r;setScreen('home',true);showToast(`Signed in as ${r}`);}
-function markMedicationTaken(id){const m=appState.medications.find(x=>x.id===id);if(!m||m.taken)return;m.taken=true;saveState(appState);showToast('Marked taken');renderApp(false);}
-function sendMessage(){const i=document.getElementById('chat-input');const t=i.value.trim();if(!t)return;appState.chatMessages.push({id:Date.now(),user:appState.role==='elder'?appState.elderName:appState.caregiverName,text:t});i.value='';saveState(appState);renderApp(false);}
-function simulateFall(){appState.isFallDetected=true;document.getElementById('overlay-elder').textContent=appState.elderName;document.getElementById('alert-overlay').classList.remove('hidden');saveState(appState);showToast('Fall detected');}
-function resolveAlert(){appState.isFallDetected=false;document.getElementById('alert-overlay').classList.add('hidden');saveState(appState);setScreen('home',false);showToast('Alert cleared');}
-function simulateCallToCaregiver(){showToast('Calling caregiver...');}
+/* load or init */
+let appState = loadState() || defaultState;
 
-function updateHeader(){
-  const back=document.getElementById('back-btn');
-  const title=document.getElementById('header-title');
-  if(appState.screen==='roleSelect'){back.classList.add('hidden');title.textContent='SmartCare';}
-  else{back.classList.remove('hidden');
-    title.textContent=appState.screen==='home'?(appState.role==='elder'?'My Dashboard':'Care Dashboard'):
-      appState.screen==='meds'?'Medication':appState.screen==='chat'?'Chat':'Alert';
+/* keep state in sync with storage */
+function setAppState(newState){
+  appState = newState;
+  saveState(appState);
+}
+
+/* ---------- SMALL UI HELPERS ---------- */
+function showToast(text, ms=2200){
+  const t = document.getElementById('toast');
+  t.querySelector('div').textContent = text;
+  t.classList.remove('hidden');
+  setTimeout(()=> t.classList.add('hidden'), ms);
+}
+
+/* ---------- NAVIGATION (EDIT) ---------- */
+function pushHistory(screen){
+  // avoid duplicate pushes
+  if(appState.history.length === 0 || appState.history[appState.history.length-1] !== screen){
+    appState.history.push(screen);
+  }
+  saveState(appState);
+}
+
+function setScreen(newScreen, push = true){
+  // only push when moving from a non-roleSelect screen
+  if(push && appState.screen && appState.screen !== 'roleSelect') pushHistory(appState.screen);
+  appState.screen = newScreen;
+  saveState(appState);
+  renderApp();
+}
+
+function goBack(){
+  // EDIT: back button fully functional and accessible
+  if(appState.history.length > 0){
+    appState.screen = appState.history.pop();
+    saveState(appState);
+    renderApp();
+  } else {
+    // if nothing in history, go to role select
+    appState.screen = 'roleSelect';
+    appState.history = [];
+    saveState(appState);
+    renderApp();
   }
 }
+
+/* ---------- ROLE HELPERS ---------- */
+function selectRole(role){
+  appState.role = role;
+  setScreen('home', true);
+  showToast(`Signed in as ${role}`);
+}
+
+/* ---------- MEDICATION & CHAT (EDIT) ---------- */
+function markMedicationTaken(id){
+  const med = appState.medications.find(m=>m.id===id);
+  if(!med) return;
+  if(!med.taken){
+    med.taken = true;
+    const now = new Date();
+    const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    appState.chatMessages.push({ id: Date.now(), user: appState.elderName, role:'elder', text:`I just took ${med.name}`, timestamp: ts });
+    saveState(appState);
+    showToast('Marked as taken');
+    renderApp(false);
+  }
+}
+
+/* send chat message */
+function sendMessage(preset=null){
+  const input = document.getElementById('chat-input');
+  let text = preset || (input ? input.value.trim() : '');
+  if(!text) return;
+  const now = new Date();
+  const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  appState.chatMessages.push({ id: Date.now(), user: appState.role==='elder' ? appState.elderName : appState.caregiverName, role: appState.role, text, timestamp: ts });
+  saveState(appState);
+  if(input) input.value='';
+  setScreen('chat', false);
+}
+
+/* ---------- FALL ALERTS (EDIT) ---------- */
+function simulateFall(){
+  // set state + overlay + notify
+  appState.isFallDetected = true;
+  saveState(appState);
+  document.getElementById('overlay-elder').textContent = appState.elderName;
+  document.getElementById('alert-overlay').classList.remove('hidden');
+  // system message
+  const now = new Date();
+  const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  appState.chatMessages.push({ id: Date.now()+1, user:'SYSTEM ALERT', role:'system', text:`*** FALL: ${appState.elderName} detected fall. Caregiver notified. ***`, timestamp:ts });
+  saveState(appState);
+  // if caregiver view, open alert screen automatically
+  if(appState.role === 'caregiver') setScreen('alert', false);
+  else setScreen('home', false);
+  showToast('Fall detected — caregiver notified (simulated)');
+}
+
+/* resolve */
+function resolveAlert(by){
+  appState.isFallDetected = false;
+  document.getElementById('alert-overlay').classList.add('hidden');
+  const now = new Date();
+  const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const resolutionText = by === 'Elder' ? 'Elder confirmed OK.' : 'Caregiver resolved alert.';
+  appState.chatMessages.push({ id: Date.now()+2, user:'SYSTEM ALERT', role:'system', text:`*** ALERT RESOLVED: ${resolutionText} ***`, timestamp:ts });
+  saveState(appState);
+  setScreen('home', false);
+  showToast('Alert resolved');
+}
+
+/* simulate calling caregiver (just toast) */
+function simulateCallToCaregiver(){
+  showToast(`Calling ${appState.caregiverName} (simulated)`);
+}
+
+/* ---------- EMERGENCY BUTTON: press & hold (EDIT) ---------- */
+let holdTimer = null;
+const HOLD_MS = 2500; // 2.5s for hold
+
+function startHoldForEmergency(){
+  const btn = document.getElementById('emergency-btn');
+  if(holdTimer) clearTimeout(holdTimer);
+  holdTimer = setTimeout(()=> {
+    btn.classList.add('scale-105');
+    simulateFall();
+  }, HOLD_MS);
+}
+
+function cancelHoldForEmergency(){
+  if(holdTimer) clearTimeout(holdTimer);
+  holdTimer = null;
+  const btn = document.getElementById('emergency-btn');
+  if(btn) btn.classList.remove('scale-105');
+}
+
+/* ---------- RENDERERS (EDIT: improved UI & added analytics card) ---------- */
 
 function renderRoleSelect(){
   return `
-  <div class="flex flex-col justify-center items-center text-center h-full gap-4">
-    <i data-lucide="heart-handshake" class="w-10 h-10 text-gray-700"></i>
-    <div>
-      <div class="h1-title mb-1">Who are you?</div>
-      <p class="text-sm text-gray-600">Choose your role</p>
+  <div class="flex flex-col h-full justify-center items-center gap-6">
+    <div class="text-center">
+      <i data-lucide="heart-handshake" class="w-16 h-16 text-gray-700"></i>
+      <div class="h1-title mt-2">Who are you?</div>
+      <div class="body-text mt-1 text-gray-600">Choose role to start</div>
     </div>
-    <button class="app-btn bg-sky-600 text-white py-2.5 w-full" onclick="selectRole('elder')">
-      <i data-lucide="person-standing"></i>&nbsp;Elder — ${appState.elderName}
-    </button>
-    <button class="app-btn bg-emerald-600 text-white py-2.5 w-full" onclick="selectRole('caregiver')">
-      <i data-lucide="user-check"></i>&nbsp;Caregiver — ${appState.caregiverName}
-    </button>
-  </div>`;}
+
+    <div class="w-full">
+      <button class="app-btn bg-sky-600 text-white py-4 w-full mb-3 rounded-lg" onclick="selectRole('elder')">
+        <i data-lucide="person-standing" class="w-7 h-7"></i> <span class="ml-2">Elder — ${appState.elderName}</span>
+      </button>
+      <button class="app-btn bg-emerald-600 text-white py-4 w-full rounded-lg" onclick="selectRole('caregiver')">
+        <i data-lucide="user-check" class="w-7 h-7"></i> <span class="ml-2">Caregiver — ${appState.caregiverName}</span>
+      </button>
+    </div>
+
+    <div class="w-full text-center text-sm text-gray-500">Tip: Hold the red emergency button on Home to trigger alert.</div>
+  </div>
+  `;
+}
 
 function renderElderHome(){
-  const next=appState.medications.find(m=>!m.taken);
-  const nextHtml=next?`<div class="text-base font-semibold">${next.time}</div><div class="text-xs">${next.name} (${next.dose})</div>`:'All meds done 🎉';
+  if(appState.isFallDetected) return renderElderFallState();
+
+  const nextMed = appState.medications.find(m=>!m.taken);
+  const nextHtml = nextMed ? `<div class="text-3xl font-bold text-sky-700">${nextMed.time}</div>
+                             <div class="text-gray-700">${nextMed.name} (${nextMed.dose})</div>` : `<div class="text-gray-600">All done for today 🎉</div>`;
+
   return `
-  <div class="space-y-3">
-    <div class="bg-white p-3 rounded-lg shadow">
-      <div class="text-xs text-gray-600">Welcome back</div>
-      <div class="text-lg font-bold text-sky-700">${appState.elderName}</div>
+  <div class="flex flex-col h-full gap-5">
+    <div class="bg-white p-4 rounded-xl shadow flex items-center justify-between">
+      <div>
+        <div class="h2-subtitle">Welcome back,</div>
+        <div class="h1-title text-sky-700">${appState.elderName}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-sm text-white px-2 py-1 rounded" style="background:#0ea5b7;">All Good</div>
+      </div>
     </div>
-    <div class="bg-amber-100 p-3 rounded-lg">${nextHtml}</div>
-    <div class="grid grid-cols-2 gap-2">
-      <button class="app-btn bg-sky-100 text-sky-800 py-2" onclick="setScreen('meds')"><i data-lucide="pill"></i>&nbsp;Meds</button>
-      <button class="app-btn bg-sky-100 text-sky-800 py-2" onclick="setScreen('chat')"><i data-lucide="message-square-text"></i>&nbsp;Chat</button>
+
+    <!-- Next reminder -->
+    <div class="bg-amber-100 p-4 rounded-xl shadow">${nextHtml}</div>
+
+    <!-- quick actions -->
+    <div class="grid grid-cols-2 gap-3">
+      <button class="app-btn bg-sky-100 text-sky-800 p-4 rounded-lg" onclick="setScreen('meds')">
+        <i data-lucide="pill" class="w-6 h-6"></i> Medication
+      </button>
+      <button class="app-btn bg-sky-100 text-sky-800 p-4 rounded-lg" onclick="setScreen('chat')">
+        <i data-lucide="message-square-text" class="w-6 h-6"></i> Chat
+      </button>
     </div>
-    <button id="emergency-btn" class="app-btn bg-red-600 text-white py-3 w-full rounded-xl"
-      onmousedown="simulateFall()" ontouchstart="simulateFall()">
-      <i data-lucide="siren"></i>&nbsp;Hold for Emergency
-    </button>
-  </div>`;}
+
+    <!-- analytics card (EDIT) -->
+    <div class="bg-white p-4 rounded-xl shadow space-y-2">
+      <div class="flex items-center justify-between">
+        <div class="font-semibold">Today</div>
+        <div class="text-sm text-gray-500">${(new Date()).toLocaleDateString()}</div>
+      </div>
+      <div class="flex gap-3 mt-2">
+        <div class="flex-1 p-3 bg-amber-50 rounded text-center">
+          <div class="text-xl font-bold">${appState.medications.filter(m=>m.taken).length}</div>
+          <div class="text-sm text-gray-600">Meds taken</div>
+        </div>
+        <div class="flex-1 p-3 bg-sky-50 rounded text-center">
+          <div class="text-xl font-bold">${appState.isFallDetected ? '1' : '0'}</div>
+          <div class="text-sm text-gray-600">Alerts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- emergency button -->
+    <div>
+      <button id="emergency-btn" class="w-full bg-red-600 text-white py-4 rounded-xl app-btn" 
+              onmousedown="startHoldForEmergency()" onmouseup="cancelHoldForEmergency()" onmouseleave="cancelHoldForEmergency()"
+              ontouchstart="startHoldForEmergency()" ontouchend="cancelHoldForEmergency()" aria-label="Emergency hold">
+        <i data-lucide="siren" class="w-6 h-6"></i>
+        <div class="font-bold text-xl">HOLD FOR EMERGENCY</div>
+        <div class="text-sm opacity-80">Hold for 2.5 seconds to trigger</div>
+      </button>
+    </div>
+  </div>
+  `;
+}
+
+function renderElderFallState(){
+  return `
+  <div class="flex flex-col h-full items-center justify-center gap-4 text-center">
+    <div class="bg-red-700 p-6 rounded-full pulse-slow">
+      <i data-lucide="triangle-alert" class="w-20 h-20 text-white"></i>
+    </div>
+    <div class="h1-title text-red-700">ALERT IN PROGRESS</div>
+    <div class="body-text">Your fall was detected. Caregiver ${appState.caregiverName} has been notified.</div>
+    <div class="w-full">
+      <button class="app-btn bg-white text-red-700 w-full py-3 rounded-lg" onclick="resolveAlert('Elder')">I'm okay — cancel</button>
+    </div>
+  </div>
+  `;
+}
 
 function renderCaregiverHome(){
+  const medsTaken = `${appState.medications.filter(m=>m.taken).length}/${appState.medications.length}`;
   return `
-  <div class="space-y-3">
-    <div class="bg-white p-3 rounded-lg shadow">
-      <div class="text-xs text-gray-600">Hello</div>
-      <div class="text-lg font-bold text-teal-600">${appState.caregiverName}</div>
+  <div class="flex flex-col h-full gap-4">
+    <div class="bg-white p-4 rounded-xl shadow flex items-center justify-between">
+      <div>
+        <div class="h2-subtitle">Hello,</div>
+        <div class="h1-title text-teal-600">${appState.caregiverName}</div>
+        <div class="text-sm text-gray-600 mt-1">${appState.elderName}'s overview</div>
+      </div>
+      <div class="text-right">
+        <div class="text-sm text-gray-500">Status</div>
+        <div class="${appState.isFallDetected ? 'text-red-600 font-bold' : 'text-green-600 font-bold'}">${appState.isFallDetected ? 'Alert' : 'Stable'}</div>
+      </div>
     </div>
-    <button class="app-btn bg-teal-500 text-white py-2.5 w-full" onclick="setScreen('chat')"><i data-lucide="message-circle"></i>&nbsp;Chat</button>
-    <button class="app-btn ${appState.isFallDetected?'bg-red-600 text-white':'bg-gray-200 text-gray-700'} py-2.5 w-full"
-      onclick="${appState.isFallDetected?'setScreen(\\'alert\\')':'showToast(\\'No alerts\\')'}">
-      <i data-lucide="bell"></i>&nbsp;${appState.isFallDetected?'View Alert':'No Active Alerts'}
-    </button>
-  </div>`;}
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="bg-amber-50 p-3 rounded text-center">
+        <div class="text-xl font-bold">${medsTaken}</div>
+        <div class="text-sm text-gray-600">Meds taken</div>
+      </div>
+      <div class="bg-sky-50 p-3 rounded text-center">
+        <div class="text-xl font-bold">—</div>
+        <div class="text-sm text-gray-600">Heart rate</div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-3 mt-2">
+      <button class="app-btn bg-teal-500 text-white py-3 rounded-lg" onclick="setScreen('chat')">Open Chat</button>
+      <button class="app-btn ${appState.isFallDetected ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'} py-3 rounded-lg"
+              onclick="${appState.isFallDetected ? "setScreen('alert')" : "showToast('No active alerts')"}">
+        ${appState.isFallDetected ? '<i data-lucide="bell" class="w-5 h-5"></i> View Alert' : '<i data-lucide="bell" class="w-5 h-5"></i> No Active Alerts'}
+      </button>
+    </div>
+  </div>
+  `;
+}
 
 function renderElderMedication(){
-  return `
-  <div>
-    <div class="h2-subtitle mb-2">Today's Meds</div>
-    ${appState.medications.map(m=>`
-      <div class="bg-white p-3 rounded-lg shadow mb-2 flex items-center justify-between">
-        <div><div class="font-semibold text-sm">${m.time}</div><div class="text-xs">${m.name}</div></div>
-        <button class="text-xs px-2 py-1 rounded ${m.taken?'bg-green-600 text-white':'bg-sky-600 text-white'}"
-          onclick="markMedicationTaken(${m.id})" ${m.taken?'disabled':''}>${m.taken?'TAKEN':'MARK'}</button>
-      </div>`).join('')}
-  </div>`;}
+  const medList = appState.medications.map(m => `
+    <div class="bg-white p-3 rounded-xl shadow flex items-center justify-between mb-3">
+      <div>
+        <div class="font-semibold">${m.time}</div>
+        <div class="text-sm text-gray-600">${m.name}</div>
+        <div class="text-xs text-gray-400">${m.dose}</div>
+      </div>
+      <div>
+        <button class="app-btn ${m.taken ? 'bg-green-600 text-white' : 'bg-sky-600 text-white'} py-2 px-4 rounded-lg"
+                onclick="markMedicationTaken(${m.id})" ${m.taken ? 'disabled' : ''}>
+          ${m.taken ? 'TAKEN' : 'MARK TAKEN'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+  return `<div><div class="h2-subtitle mb-3">Today's Schedule</div>${medList}</div>`;
+}
 
 function renderChat(){
-  const msgs=appState.chatMessages.map(m=>`
-    <div class="mb-2 ${m.user===appState.elderName?'text-right':'text-left'}">
-      <div class="inline-block p-2 rounded-lg text-xs ${m.user===appState.elderName?'bg-sky-600 text-white':'bg-gray-200 text-gray-800'}">
-        ${m.text}
+  const messages = appState.chatMessages.map(msg => `
+    <div class="mb-3 ${msg.role === appState.role ? 'text-right' : 'text-left'}">
+      <div class="inline-block ${msg.role === appState.role ? 'bg-sky-600 text-white' : 'bg-gray-200 text-gray-800'} p-3 rounded-xl max-w-[80%]">
+        <div class="text-xs font-semibold ${msg.role === appState.role ? 'opacity-80' : 'text-gray-600'}">${msg.user}</div>
+        <div class="mt-1">${msg.text}</div>
+        <div class="text-xs opacity-60 mt-1 text-right">${msg.timestamp}</div>
       </div>
-    </div>`).join('');
-  return `
-  <div class="flex flex-col h-full">
-    <div id="chat-messages" class="flex-grow overflow-auto mb-2 p-1">${msgs}</div>
-    <div class="flex">
-      <input id="chat-input" class="flex-grow p-2 border rounded-l-md text-sm" placeholder="Message..." />
-      <button class="bg-sky-600 text-white px-3 rounded-r-md" onclick="sendMessage()">Send</button>
     </div>
-  </div>`;}
+  `).join('');
+  return `
+    <div class="flex flex-col h-full">
+      <div id="chat-messages" class="flex-grow overflow-auto mb-3 p-2">${messages}</div>
+      <div class="flex gap-2">
+        <input id="chat-input" class="flex-grow p-3 rounded-l-xl border-2 border-gray-200" placeholder="Type a message" />
+        <button class="bg-sky-600 text-white p-3 rounded-r-xl" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  `;
+}
 
 function renderFallAlert(){
   return `
-  <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
-    <i data-lucide="shield-alert" class="w-14 h-14 text-red-600"></i>
-    <div class="h1-title text-red-700">FALL ALERT</div>
-    <p class="text-sm">Elder ${appState.elderName} — a fall event was detected.</p>
-    <button class="app-btn bg-green-600 text-white py-2 w-full" onclick="simulateCallToCaregiver()">Call (Sim)</button>
-    <button class="app-btn bg-sky-500 text-white py-2 w-full" onclick="resolveAlert()">Mark Resolved</button>
-  </div>`;}
+    <div class="flex flex-col h-full items-center justify-center gap-4 text-center">
+      <i data-lucide="shield-alert" class="w-20 h-20 text-red-600"></i>
+      <div class="h1-title">FALL ALERT</div>
+      <div class="body-text">Elder ${appState.elderName} — a fall event was detected.</div>
+      <div class="w-full">
+        <button class="app-btn bg-green-600 text-white w-full py-3 rounded-lg" onclick="simulateCallToCaregiver()">Call (sim)</button>
+        <button class="app-btn bg-sky-500 text-white w-full py-3 rounded-lg mt-2" onclick="resolveAlert('Caregiver')">Mark resolved</button>
+      </div>
+    </div>
+  `;
+}
+
+/* MAIN render function (runs after any change) */
+function updateHeader(){
+  const backBtn = document.getElementById('back-btn');
+  const title = document.getElementById('header-title');
+
+  if(appState.screen === 'roleSelect'){
+    backBtn.classList.add('hidden');
+    title.textContent = 'SmartCare';
+    document.getElementById('app-header').style.background = 'var(--color-primary)';
+  } else {
+    backBtn.classList.remove('hidden');
+    // color by role
+    document.getElementById('app-header').style.background = appState.role === 'elder' ? 'var(--color-primary)' : '#0891b2';
+    // dynamic title
+    let t = 'SmartCare';
+    if(appState.screen === 'home') t = appState.role === 'elder' ? 'My Dashboard' : 'Care Dashboard';
+    if(appState.screen === 'meds') t = 'Medication';
+    if(appState.screen === 'chat') t = 'Chat';
+    if(appState.screen === 'alert') t = 'Fall Alert';
+    title.textContent = t;
+  }
+}
 
 function renderApp(renderIcons=true){
-  const main=document.getElementById('app-screen');
+  const app = document.getElementById('app-screen');
   updateHeader();
-  let html='';
-  switch(appState.screen){
-    case 'roleSelect':html=renderRoleSelect();break;
-    case 'home':html=appState.role==='elder'?renderElderHome():renderCaregiverHome();break;
-    case 'meds':html=renderElderMedication();break;
-    case 'chat':html=renderChat();break;
-    case 'alert':html=renderFallAlert();break;
-  }
-  main.innerHTML=html;
-  if(renderIcons)lucide.createIcons();
-  if(appState.screen==='chat'){const box=document.getElementById('chat-messages');if(box)box.scrollTop=box.scrollHeight;}
-}
-document.addEventListener('DOMContentLoaded',()=>renderApp());
-</script>
 
+  let html = '';
+  switch(appState.screen){
+    case 'roleSelect': html = renderRoleSelect(); break;
+    case 'home': html = appState.role === 'elder' ? renderElderHome() : renderCaregiverHome(); break;
+    case 'meds': html = renderElderMedication(); break;
+    case 'chat': html = renderChat(); break;
+    case 'alert': html = renderFallAlert(); break;
+    default: html = renderRoleSelect();
+  }
+
+  app.innerHTML = html;
+  if(renderIcons) lucide.createIcons(); // EDIT: ensure icons rendered after DOM changes
+
+  // scroll chat to bottom if on chat
+  if(appState.screen === 'chat'){
+    const box = document.getElementById('chat-messages');
+    if(box) box.scrollTop = box.scrollHeight;
+    // focus input for accessibility
+    const input = document.getElementById('chat-input');
+    if(input) input.focus();
+  }
+}
+
+/* initial render */
+document.addEventListener('DOMContentLoaded', () => {
+  renderApp();
+});
+</script>
 </body>
 </html>
+
