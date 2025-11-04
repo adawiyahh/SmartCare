@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SmartCare Prototype — Soft Blue</title>
+
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ---------- Theme & Typography ---------- */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+    :root{
+      --soft-bg: #f4f8ff;
+      --blue-600: #2e6bff;
+      --blue-500: #4a86ff;
+      --blue-200: #dfeeff;
+      --card: #ffffff;
+      --muted: #475569;
+      --danger: #ef4444;
+      --success: #16a34a;
+      --radius: 18px;
+      --btn-radius: 14px;
+      --hold-ms: 2500; /* mirrors JS hold time */
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background: linear-gradient(180deg, var(--soft-bg) 0%, #eef6ff 100%);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    /* ---------- Phone frame ---------- */
+    .phone-frame{
+      width:100%;
+      max-width:420px;
+      height:860px;
+      border-radius:28px;
+      overflow:hidden;
+      box-shadow: 0 18px 40px rgba(15,23,42,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(245,250,255,1));
+      border: 1px solid rgba(46,86,255,0.06);
+      display:flex;
+      flex-direction:column;
+      position:relative;
+    }
+
+    header#app-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px;
+      background: linear-gradient(90deg, var(--blue-200), #e3f0ff);
+      gap:8px;
+    }
+
+    .header-left, .header-right { width:56px; display:flex; align-items:center; justify-content:center; }
+    .header-center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    #logo { width:56px; height:56px; border-radius:12px; object-fit:cover; box-shadow:0 6px 18px rgba(46,107,255,0.08); border:2px solid white; }
+    #header-title { color:#053067; font-weight:700; font-size:18px; margin-top:6px; }
+
+    main#app-screen{ flex:1; padding:18px; overflow:auto; -webkit-overflow-scrolling:touch; }
+
+    .h1-title{ font-size:20px; font-weight:800; color:#053067; }
+    .h2-subtitle{ font-size:16px; font-weight:700; color:var(--muted); }
+    .body-text{ font-size:15px; color:var(--muted); line-height:1.5; }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow: 0 6px 18px rgba(10,30,80,0.04);
+      border:1px solid rgba(10,30,80,0.03);
+    }
+
+    .app-btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      border-radius: var(--btn-radius); font-weight:700; padding:12px 14px;
+      cursor:pointer; transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none; font-size:15px;
+    }
+    .app-btn:active{ transform: translateY(1px) scale(.997); }
+    .app-btn:focus{ outline:3px solid rgba(74,134,255,0.18); outline-offset:2px; }
+
+    .btn-primary{ background: linear-gradient(180deg,var(--blue-500),var(--blue-600)); color:white; border:none; }
+    .btn-soft{ background:var(--blue-200); color:#063061; border:none; }
+    .btn-ghost{ background:transparent; color:#064e9b; border:1px solid rgba(10,30,80,0.06); }
+
+    /* emergency button special */
+    #emergency-wrap{ position:relative; width:100%; }
+    #emergency-btn{
+      width:100%; padding:16px; border-radius:16px; background:linear-gradient(180deg,#ff7b7b,#ef4444);
+      color:white; display:flex; gap:12px; align-items:center; justify-content:center; font-weight:800;
+    }
+    /* progress circle for hold feedback */
+    #hold-progress{
+      position:absolute; right:12px; top:12px; width:48px; height:48px;
+      display:flex; align-items:center; justify-content:center; pointer-events:none;
+    }
+    svg.progress { transform: rotate(-90deg); }
+
+    /* overlay alert */
+    #alert-overlay{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:20px; z-index:60; background: linear-gradient(180deg, rgba(2,6,23,0.35), rgba(2,6,23,0.5)); }
+    #alert-card{ width:100%; max-width:380px; background:linear-gradient(180deg,#fff7f7,#fff1f1); border-radius:20px; padding:20px; text-align:center; box-shadow:0 18px 40px rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.06); }
+
+    /* chat bubble */
+    .bubble{ padding:10px 14px; border-radius:18px; display:inline-block; max-width:82%; font-size:15px; }
+    .bubble-me{ background: linear-gradient(180deg,var(--blue-500),var(--blue-600)); color:white; border-bottom-right-radius:6px; }
+    .bubble-other{ background:#f1f5f9; color:#0f172a; border-bottom-left-radius:6px; }
+
+    /* small helpers */
+    .muted{ color:var(--muted); }
+    .text-center{text-align:center;}
+    .mt-2{ margin-top:8px; }
+    .mt-4{ margin-top:14px; }
+
+    /* hold visual states */
+    .scale-105{ transform: scale(1.05); }
+    .pulse-slow{ animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%{ transform:scale(1);}50%{transform:scale(1.04);}100%{transform:scale(1);} }
+
+    /* responsive */
+    @media (min-width:420px){ .phone-frame{ transform:scale(1); } }
+  </style>
+</head>
+<body>
+
+  <div class="phone-frame" role="application" aria-label="SmartCare Prototype (soft blue)">
+    <!-- Header -->
+    <header id="app-header" aria-hidden="false">
+      <div class="header-left">
+        <button id="back-btn" class="app-btn btn-ghost" aria-label="Back" title="Back" onclick="goBack()" style="display:none;">
+          <i data-lucide="chevron-left" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="header-center">
+        <img id="logo" src="https://github.com/adawiyahh/SmartCare/blob/main/logo%202%20SmartCare.jpg?raw=true" alt="SmartCare logo" />
+        <div id="header-title">SmartCare</div>
+      </div>
+
+      <div class="header-right"></div>
+    </header>
+
+    <!-- Main Screen -->
+    <main id="app-screen" tabindex="0" aria-live="polite"></main>
+
+    <!-- Alert overlay -->
+    <div id="alert-overlay" class="hidden" role="alertdialog" aria-modal="true" aria-labelledby="alert-title">
+      <div id="alert-card" role="document">
+        <div style="margin-bottom:8px;"><i data-lucide="shield-alert" class="w-14 h-14 text-red-600"></i></div>
+        <div id="alert-title" class="h1-title" style="color:var(--danger)">EMERGENCY</div>
+        <div class="body-text mt-2">Fall detected for <strong id="overlay-elder"></strong>. A caregiver was notified.</div>
+
+        <div class="mt-4 flex flex-col gap-3">
+          <button class="app-btn btn-primary" onclick="resolveAlert('Elder')" aria-label="I am okay - cancel alert">
+            <i data-lucide="check-circle" class="w-5 h-5"></i> I'm okay — Cancel
+          </button>
+          <button class="app-btn btn-soft" onclick="simulateCallToCaregiver()">
+            <i data-lucide="phone-call" class="w-5 h-5"></i> Call caregiver (simulate)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-8 z-50 hidden">
+      <div class="card" style="display:inline-block;background:#071033;color:white;padding:10px 14px;border-radius:12px;">Notification</div>
+    </div>
+  </div>
+
+<script>
+/* ===========================
+   SmartCare — Soft Blue Single-file App
+   - All features preserved
+   - Robust pointer-based hold-to-trigger emergency
+   =========================== */
+
+const STORAGE_KEY = 'smartcare_app_state_v3';
+
+/* ---------- State helpers ---------- */
+function loadState(){
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; } catch(e){ return null; }
+}
+function saveState(state){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+/* ---------- Default state ---------- */
+const DEFAULT = {
+  role: null,
+  screen: 'roleSelect',
+  history: [],
+  isFallDetected: false,
+  elderName: "Theo James",
+  caregiverName: "Adrubyjane",
+  medications: [
+    { id:1, name:"Metformin (Diabetes)", dose:"500mg", time:"8:00 AM", taken:false },
+    { id:2, name:"Lisinopril (BP)", dose:"10mg", time:"6:00 PM", taken:false },
+    { id:3, name:"Vitamin D", dose:"1 tablet", time:"8:00 PM", taken:false }
+  ],
+  chatMessages: [
+    { id:1, user:'Adrubyjane', role:'caregiver', text:'Good morning! Did you sleep well?', timestamp:'09:00' },
+    { id:2, user:'Theo James', role:'elder', text:'Yes, I slept fine, thanks!', timestamp:'09:05' }
+  ]
+};
+
+let appState = loadState() || DEFAULT;
+
+/* Central setter */
+function setAppState(newState){
+  appState = newState;
+  saveState(appState);
+}
+
+/* ---------- UI helpers ---------- */
+function showToast(text, ms=2200){
+  const t = document.getElementById('toast');
+  t.querySelector('div').textContent = text;
+  t.classList.remove('hidden');
+  setTimeout(()=> t.classList.add('hidden'), ms);
+}
+
+/* ---------- Navigation ---------- */
+function pushHistory(screen){
+  if(!appState.history.length || appState.history[appState.history.length-1] !== screen){
+    appState.history.push(screen);
+  }
+  saveState(appState);
+}
+
+function setScreen(newScreen, push=true){
+  if(push && appState.screen && appState.screen !== 'roleSelect') pushHistory(appState.screen);
+  appState.screen = newScreen;
+  saveState(appState);
+  renderApp();
+}
+
+function goBack(){
+  if(appState.history.length > 0){
+    appState.screen = appState.history.pop();
+    saveState(appState);
+    renderApp();
+  } else {
+    appState.screen = 'roleSelect';
+    appState.history = [];
+    saveState(appState);
+    renderApp();
+  }
+}
+
+/* ---------- Role ---------- */
+function selectRole(role){
+  appState.role = role;
+  setScreen('home', true);
+  showToast(`Signed in as ${role}`);
+}
+
+/* ---------- Medication ---------- */
+function markMedicationTaken(id){
+  const med = appState.medications.find(m=>m.id===id);
+  if(!med || med.taken) return;
+  med.taken = true;
+  const now = new Date();
+  const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  appState.chatMessages.push({ id: Date.now(), user: appState.elderName, role:'elder', text:`I just took ${med.name}`, timestamp: ts });
+  saveState(appState);
+  showToast('Marked as taken');
+  renderApp(false);
+}
+
+/* ---------- Chat ---------- */
+function sendMessage(preset=null){
+  const input = document.getElementById('chat-input');
+  let text = preset || (input ? input.value.trim() : '');
+  if(!text) return;
+  const now = new Date();
+  const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  appState.chatMessages.push({ id: Date.now(), user: appState.role === 'elder' ? appState.elderName : appState.caregiverName, role: appState.role, text, timestamp: ts });
+  saveState(appState);
+  if(input) input.value = '';
+  setScreen('chat', false);
+}
+
+/* ---------- Alerts ---------- */
+function simulateFall(){
+  // don't re-trigger if already active
+  if(appState.isFallDetected) return;
+  appState.isFallDetected = true;
+  saveState(appState);
+  document.getElementById('overlay-elder').textContent = appState.elderName;
+
+  const now = new Date();
+  const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  appState.chatMessages.push({ id: Date.now()+1, user:'SYSTEM ALERT', role:'system', text:`*** FALL: ${appState.elderName} detected fall. Caregiver notified. ***`, timestamp:ts });
+  saveState(appState);
+
+  // switch to alert screen for caregiver else show home
+  if(appState.role === 'caregiver') setScreen('alert', false);
+  else setScreen('home', false);
+
+  showToast('Fall detected — caregiver notified (simulated)');
+  renderApp();
+}
+
+function resolveAlert(by){
+  appState.isFallDetected = false;
+  saveState(appState);
+  const now = new Date();
+  const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const resolutionText = by === 'Elder' ? 'Elder confirmed OK.' : 'Caregiver resolved alert.';
+  appState.chatMessages.push({ id: Date.now()+2, user:'SYSTEM ALERT', role:'system', text:`*** ALERT RESOLVED: ${resolutionText} ***`, timestamp:ts });
+  saveState(appState);
+  setScreen('home', false);
+  showToast('Alert resolved');
+  renderApp();
+}
+
+function simulateCallToCaregiver(){
+  showToast(`Calling ${appState.caregiverName} (simulated)`);
+}
+
+/* ---------- Robust hold-to-trigger (pointer events) ---------- */
+/* Implementation details:
+   - Uses pointerdown / pointerup / pointercancel for consistent touch + mouse handling
+   - Shows a circular progress SVG that fills over HOLD_MS
+   - Prevents accidental immediate triggers by requiring continuous pointer press
+*/
+const HOLD_MS = 2500; // ms
+let holdData = { timer: null, start: 0, progressInterval: null, triggered: false };
+
+function startHoldForEmergency(evt){
+  // ignore non-primary buttons
+  if(evt.pointerType === 'mouse' && evt.button !== 0) return;
+
+  const btn = document.getElementById('emergency-btn');
+  const progressSvg = document.getElementById('progress-circle');
+  const circle = document.getElementById('progress-ring');
+
+  // reset if already active
+  cancelHoldForEmergency();
+
+  holdData.triggered = false;
+  holdData.start = performance.now();
+
+  // visual start
+  btn.classList.add('active');
+
+  // incrementally update progress circle
+  function updateProgress(){
+    const elapsed = performance.now() - holdData.start;
+    const percent = Math.min(1, elapsed / HOLD_MS);
+    const circumference = 2 * Math.PI * 18; // stroke radius 18
+    const offset = circumference * (1 - percent);
+    if(circle) circle.style.strokeDashoffset = offset;
+    if(percent >= 1 && !holdData.triggered){
+      holdData.triggered = true;
+      simulateFall();
+      cancelHoldForEmergency(); // cleanup
+    }
+  }
+
+  // set initial circle values
+  if(circle){
+    const circumference = 2 * Math.PI * 18;
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = `${circumference}`;
+  }
+
+  // small interval to animate progress smoothly
+  holdData.progressInterval = setInterval(updateProgress, 50);
+
+  // safety timer (fallback)
+  holdData.timer = setTimeout(()=>{
+    // if not already triggered, trigger now
+    if(!holdData.triggered){
+      holdData.triggered = true;
+      simulateFall();
+      cancelHoldForEmergency();
+    }
+  }, HOLD_MS + 50);
+
+  // capture pointer to ensure we get pointerup even if finger moves outside
+  if(evt.target && evt.pointerId) evt.target.setPointerCapture && evt.target.setPointerCapture(evt.pointerId);
+}
+
+function cancelHoldForEmergency(evt){
+  // release pointer capture if provided
+  try {
+    if(evt && evt.target && evt.pointerId) evt.target.releasePointerCapture && evt.target.releasePointerCapture(evt.pointerId);
+  } catch(e){ /* ignore */ }
+
+  // cleanup
+  if(holdData.timer) { clearTimeout(holdData.timer); holdData.timer = null; }
+  if(holdData.progressInterval) { clearInterval(holdData.progressInterval); holdData.progressInterval = null; }
+
+  const btn = document.getElementById('emergency-btn');
+  const circle = document.getElementById('progress-ring');
+  if(btn) btn.classList.remove('active', 'scale-105');
+  if(circle){
+    const circumference = 2 * Math.PI * 18;
+    circle.style.strokeDashoffset = `${circumference}`;
+  }
+  holdData.start = 0;
+  holdData.triggered = false;
+}
+
+/* ---------- Renderers ---------- */
+function renderRoleSelect(){
+  return `
+    <div class="flex flex-col h-full justify-center items-center gap-3">
+      <div class="text-center">
+        <i data-lucide="heart-handshake" class="w-20 h-20 text-blue-500"></i>
+        <div class="h1-title mt-2">Who are you?</div>
+        <div class="body-text mt-2 muted">Choose a role to continue</div>
+      </div>
+
+      <div style="width:100%; margin-top:14px;">
+        <button class="app-btn btn-primary w-full mb-3" onclick="selectRole('elder')" aria-label="Sign in as elder">
+          <i data-lucide="person-standing" class="w-5 h-5"></i>
+          <span> Elder — ${appState.elderName}</span>
+        </button>
+
+        <button class="app-btn btn-soft w-full" onclick="selectRole('caregiver')" aria-label="Sign in as caregiver">
+          <i data-lucide="user-check" class="w-5 h-5"></i>
+          <span> Caregiver — ${appState.caregiverName}</span>
+        </button>
+      </div>
+
+      <div class="muted text-center mt-4" style="font-size:13px;">Tip: Press and hold the red emergency button on Home for 2.5 seconds to trigger an alert.</div>
+    </div>
+  `;
+}
+
+function renderElderHome(){
+  if(appState.isFallDetected) return renderElderFallState();
+
+  const nextMed = appState.medications.find(m=>!m.taken);
+  const nextHtml = nextMed ? `<div style="font-size:28px;font-weight:800;color:var(--blue-600)">${nextMed.time}</div>
+                             <div class="muted">${nextMed.name} — ${nextMed.dose}</div>`
+                           : `<div class="muted">All medications done for today 🎉</div>`;
+
+  const medsTakenCount = appState.medications.filter(m=>m.taken).length;
+
+  return `
+    <div class="flex flex-col h-full gap-4">
+      <div class="card flex items-center justify-between">
+        <div>
+          <div class="h2-subtitle">Welcome back,</div>
+          <div class="h1-title">${appState.elderName}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="background:#e6f0ff;padding:6px 10px;border-radius:10px;font-weight:700;color:var(--blue-600)">All Good</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="h2-subtitle">Next Reminder</div>
+        <div class="mt-2">${nextHtml}</div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button class="app-btn btn-ghost card" style="width:100%" onclick="setScreen('meds')">
+          <i data-lucide="pill" class="w-5 h-5"></i> <span>Medication</span>
+        </button>
+        <button class="app-btn btn-ghost card" style="width:100%" onclick="setScreen('chat')">
+          <i data-lucide="message-square" class="w-5 h-5"></i> <span>Chat</span>
+        </button>
+      </div>
+
+      <div class="card flex items-center justify-between">
+        <div>
+          <div style="font-weight:700">Today's Summary</div>
+          <div class="muted mt-1">${(new Date()).toLocaleDateString()}</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <div style="background:#eaf4ff;padding:10px;border-radius:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:800">${medsTakenCount}</div>
+            <div class="muted" style="font-size:13px">Meds taken</div>
+          </div>
+          <div style="background:#f1f7ff;padding:10px;border-radius:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:800">${appState.isFallDetected ? '1' : '0'}</div>
+            <div class="muted" style="font-size:13px">Alerts</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="emergency-wrap">
+        <div style="position:relative;">
+          <button id="emergency-btn" class="app-btn" aria-label="Hold for emergency"
+            onpointerdown="startHoldForEmergency(event)" onpointerup="cancelHoldForEmergency(event)"
+            onpointercancel="cancelHoldForEmergency(event)" onpointerleave="cancelHoldForEmergency(event)"
+            style="background:linear-gradient(180deg,#ff7b7b,#ef4444); color:white; padding:16px; border-radius:16px;">
+            <i data-lucide="siren" class="w-5 h-5"></i>
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <div style="font-weight:800;font-size:16px;">HOLD FOR EMERGENCY</div>
+              <div class="muted" style="font-size:13px;">Hold for 2.5s to trigger</div>
+            </div>
+          </button>
+
+          <!-- progress ring (gives user feedback while holding) -->
+          <div id="hold-progress" aria-hidden="true">
+            <svg class="progress" width="48" height="48" viewBox="0 0 48 48">
+              <circle cx="24" cy="24" r="18" stroke="#e2e8f0" stroke-width="6" fill="none"></circle>
+              <circle id="progress-ring" cx="24" cy="24" r="18" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" style="stroke:#ffe8e8;"></circle>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderElderFallState(){
+  return `
+    <div class="flex flex-col h-full items-center justify-center gap-3 text-center">
+      <div class="bg-white p-6 rounded-full pulse-slow">
+        <i data-lucide="triangle-alert" class="w-20 h-20 text-red-600"></i>
+      </div>
+      <div class="h1-title" style="color:var(--danger)">ALERT IN PROGRESS</div>
+      <div class="body-text">Your fall was detected. Caregiver ${appState.caregiverName} has been notified.</div>
+      <div style="width:100%; margin-top:8px;">
+        <button class="app-btn" style="width:100%; background:white; color:var(--danger); border-radius:12px;" onclick="resolveAlert('Elder')">I'm okay — Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderCaregiverHome(){
+  const medsTaken = `${appState.medications.filter(m=>m.taken).length}/${appState.medications.length}`;
+  return `
+    <div class="flex flex-col h-full gap-4">
+      <div class="card flex items-center justify-between">
+        <div>
+          <div class="h2-subtitle">Hello,</div>
+          <div class="h1-title">${appState.caregiverName}</div>
+          <div class="muted mt-1">${appState.elderName}'s overview</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="muted">Status</div>
+          <div style="font-weight:800; color:${appState.isFallDetected ? 'var(--danger)' : 'var(--success)'}">${appState.isFallDetected ? 'Alert' : 'Stable'}</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="card text-center">
+          <div style="font-weight:800; font-size:18px;">${medsTaken}</div>
+          <div class="muted">Meds taken</div>
+        </div>
+        <div class="card text-center">
+          <div style="font-weight:800; font-size:18px;">—</div>
+          <div class="muted">Heart rate</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <button class="app-btn btn-primary" onclick="setScreen('chat')">Open Chat</button>
+        <button class="app-btn ${appState.isFallDetected ? '' : 'btn-soft'}" onclick="${appState.isFallDetected ? "setScreen('alert')" : "showToast('No active alerts')"}">
+          <i data-lucide="bell" class="w-5 h-5"></i>
+          ${appState.isFallDetected ? 'View Alert' : 'No Active Alerts'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderElderMedication(){
+  const medList = appState.medications.map(m => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);padding:12px;border-radius:12px;border:1px solid rgba(10,30,80,0.03);margin-bottom:12px;">
+      <div>
+        <div style="font-weight:800">${m.time}</div>
+        <div class="muted" style="font-size:14px;margin-top:4px;">${m.name}</div>
+        <div class="muted" style="font-size:12px;margin-top:6px;">${m.dose}</div>
+      </div>
+      <div>
+        <button class="app-btn" style="background:${m.taken ? '#22c55e' : 'linear-gradient(180deg,var(--blue-500),var(--blue-600))'}; color:white; padding:10px 14px; border-radius:10px;"
+          onclick="markMedicationTaken(${m.id})" ${m.taken ? 'disabled' : ''}>
+          ${m.taken ? 'TAKEN' : 'MARK TAKEN'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+  return `<div><div class="h2-subtitle mb-3">Today's Schedule</div>${medList}</div>`;
+}
+
+function renderChat(){
+  const messages = appState.chatMessages.map(msg => `
+    <div style="margin-bottom:12px;${msg.role === appState.role ? 'text-align:right;' : 'text-align:left;'}">
+      <div class="${msg.role === appState.role ? 'bubble bubble-me' : 'bubble bubble-other'}">
+        <div style="font-size:12px;font-weight:700;opacity:0.9;">${msg.user}</div>
+        <div style="margin-top:6px;">${msg.text}</div>
+        <div style="font-size:11px;opacity:0.6;margin-top:6px;text-align:right;">${msg.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="flex flex-col h-full">
+      <div id="chat-messages" class="flex-grow overflow-auto mb-3" style="padding:6px 4px;">${messages}</div>
+
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="chat-input" aria-label="Chat message" placeholder="Type a message" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(10,30,80,0.06)" />
+        <button class="app-btn btn-primary" onclick="sendMessage()">
+          <i data-lucide="send" class="w-4 h-4"></i> Send
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderFallAlert(){
+  return `
+    <div class="flex flex-col h-full items-center justify-center gap-3 text-center">
+      <i data-lucide="shield-alert" class="w-20 h-20 text-red-600"></i>
+      <div class="h1-title">FALL ALERT</div>
+      <div class="body-text">Elder ${appState.elderName} — a fall was detected.</div>
+      <div style="width:100%;margin-top:8px;">
+        <button class="app-btn btn-primary" style="width:100%" onclick="simulateCallToCaregiver()">Call (sim)</button>
+        <button class="app-btn btn-soft" style="width:100%;margin-top:8px;" onclick="resolveAlert('Caregiver')">Mark resolved</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Header + main render ---------- */
+function updateHeader(){
+  const backBtn = document.getElementById('back-btn');
+  const title = document.getElementById('header-title');
+
+  if(appState.screen === 'roleSelect'){
+    backBtn.style.display = 'none';
+    title.textContent = 'SmartCare';
+  } else {
+    backBtn.style.display = 'flex';
+    title.textContent = (function(){
+      if(appState.screen === 'home') return appState.role === 'elder' ? 'My Dashboard' : 'Care Dashboard';
+      if(appState.screen === 'meds') return 'Medication';
+      if(appState.screen === 'chat') return 'Chat';
+      if(appState.screen === 'alert') return 'Fall Alert';
+      return 'SmartCare';
+    })();
+  }
+
+  // subtle header color by role
+  const header = document.getElementById('app-header');
+  if(appState.role === 'caregiver') header.style.background = 'linear-gradient(90deg,#e6f7ff,#d7ecff)';
+  else header.style.background = 'linear-gradient(90deg,#e6f0ff,#cfe3ff)';
+}
+
+function renderApp(renderIcons=true){
+  const app = document.getElementById('app-screen');
+  updateHeader();
+
+  let html = '';
+  switch(appState.screen){
+    case 'roleSelect': html = renderRoleSelect(); break;
+    case 'home': html = appState.role === 'elder' ? renderElderHome() : renderCaregiverHome(); break;
+    case 'meds': html = renderElderMedication(); break;
+    case 'chat': html = renderChat(); break;
+    case 'alert': html = renderFallAlert(); break;
+    default: html = renderRoleSelect();
+  }
+
+  app.innerHTML = html;
+  if(renderIcons) lucide.createIcons();
+
+  // chat autoscroll & focus
+  if(appState.screen === 'chat'){
+    const box = document.getElementById('chat-messages');
+    if(box) box.scrollTop = box.scrollHeight;
+    const input = document.getElementById('chat-input');
+    if(input) input.focus();
+  }
+
+  // overlay show/hide
+  const overlay = document.getElementById('alert-overlay');
+  if(appState.isFallDetected){
+    overlay.classList.remove('hidden');
+    document.getElementById('overlay-elder').textContent = appState.elderName;
+  } else {
+    overlay.classList.add('hidden');
+  }
+}
+
+/* ---------- Init ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  renderApp();
+
+  // Ensure progress ring initial values
+  const circle = document.getElementById('progress-ring');
+  if(circle){
+    const circumference = 2 * Math.PI * 18;
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = `${circumference}`;
+    circle.style.stroke = '#ffdede'; // subtle color while holding
+  }
+});
+
+// Make sure icons render after window load
+window.addEventListener('load', () => { lucide.createIcons(); });
+
+</script>
+</body>
+</html>
